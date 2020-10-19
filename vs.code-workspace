@@ -3,5 +3,27 @@
 		{
 			"path": "."
 		}
-	]
+	],
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"type": "java",
+				"name": "Debug (Launch) - openapi-generator-cli",
+				"request": "launch",
+				"mainClass": "org.openapitools.codegen.OpenAPIGenerator",
+				"cwd": "C:/extern/workbench/parental-control/languagefilter/api",
+				"args": [
+					"generate",
+					"-i", "\"./api-schema-v1-openapi.yaml\"",
+					"--generator-name", "ktorm",
+					"--output", "\"../remote-app/db\"",
+					"--config", "\"./database-config.yaml\"",
+				]
+			}
+		]
+	},
+	"settings": {
+		"java.dependency.packagePresentation": "hierarchical"
+	}
 }

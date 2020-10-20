@@ -9,7 +9,7 @@
 		"configurations": [
 			{
 				"type": "java",
-				"name": "Debug (Launch) - openapi-generator-cli",
+				"name": "Debug (Launch) - openapi-generator-cli - database",
 				"request": "launch",
 				"mainClass": "org.openapitools.codegen.OpenAPIGenerator",
 				"cwd": "C:/extern/workbench/parental-control/languagefilter/api",
@@ -20,7 +20,21 @@
 					"--output", "\"../remote-app/db\"",
 					"--config", "\"./database-config.yaml\"",
 				]
-			}
+			},
+			{
+				"type": "java",
+				"name": "Debug (Launch) - openapi-generator-cli - server",
+				"request": "launch",
+				"mainClass": "org.openapitools.codegen.OpenAPIGenerator",
+				"cwd": "C:/extern/workbench/parental-control/languagefilter/api",
+				"args": [
+					"generate",
+					"-i", "\"./api-schema-v1-openapi.yaml\"",
+					"--generator-name", "kotlin-server",
+					"--output", "\"../tv-app/api\"",
+					"--config", "\"./server-config.yaml\"",
+				]
+			}			
 		]
 	},
 	"settings": {

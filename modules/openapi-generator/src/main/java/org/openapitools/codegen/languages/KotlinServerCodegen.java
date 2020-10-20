@@ -32,18 +32,34 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 public class KotlinServerCodegen extends AbstractKotlinCodegen {
 
-    public static final String DEFAULT_LIBRARY = Constants.KTOR;
     private static final Logger LOGGER = LoggerFactory.getLogger(KotlinServerCodegen.class);
+
+    public static final String DEFAULT_LIBRARY = Constants.KTOR;
+
     private Boolean autoHeadFeatureEnabled = true;
     private Boolean conditionalHeadersFeatureEnabled = false;
     private Boolean hstsFeatureEnabled = true;
     private Boolean corsFeatureEnabled = false;
     private Boolean compressionFeatureEnabled = true;
+    
+    private String collectionType = CollectionType.ARRAY.value;
 
-    // This is here to potentially warn the user when an option is not supoprted by the target framework.
+    public enum CollectionType {
+        ARRAY("array"),
+        LIST("list");
+
+        public final String value;
+
+        CollectionType(String value) {
+            this.value = value;
+        }
+    }
+
+    // This is here to potentially warn the user when an option is not supported by the target framework.
     private Map<String, List<String>> optionsSupportedPerFramework = new ImmutableMap.Builder<String, List<String>>()
             .put(Constants.KTOR, Arrays.asList(
                     Constants.AUTOMATIC_HEAD_REQUESTS,
@@ -98,11 +114,18 @@ public class KotlinServerCodegen extends AbstractKotlinCodegen {
 
         supportedLibraries.put(Constants.KTOR, "ktor framework");
 
+        CliOption collectionType = new CliOption(Constants.COLLECTION_TYPE, Constants.COLLECTION_TYPE_DESC);
+        Map<String, String> collectionOptions = new HashMap<>();
+        collectionOptions.put(CollectionType.ARRAY.value, "kotlin.Array");
+        collectionOptions.put(CollectionType.LIST.value, "kotlin.collections.List");
+        collectionType.setEnum(collectionOptions);
+        collectionType.setDefault(this.collectionType);
+        cliOptions.add(collectionType);
+
         // TODO: Configurable server engine. Defaults to netty in build.gradle.
         CliOption library = new CliOption(CodegenConstants.LIBRARY, CodegenConstants.LIBRARY_DESC);
         library.setDefault(DEFAULT_LIBRARY);
         library.setEnum(supportedLibraries);
-
         cliOptions.add(library);
 
         addSwitch(Constants.AUTOMATIC_HEAD_REQUESTS, Constants.AUTOMATIC_HEAD_REQUESTS_DESC, getAutoHeadFeatureEnabled());
@@ -118,6 +141,10 @@ public class KotlinServerCodegen extends AbstractKotlinCodegen {
 
     public void setAutoHeadFeatureEnabled(Boolean autoHeadFeatureEnabled) {
         this.autoHeadFeatureEnabled = autoHeadFeatureEnabled;
+    }
+
+    public void setCollectionType(String collectionType) {
+        this.collectionType = collectionType;
     }
 
     public Boolean getCompressionFeatureEnabled() {
@@ -209,6 +236,16 @@ public class KotlinServerCodegen extends AbstractKotlinCodegen {
             additionalProperties.put(Constants.COMPRESSION, getCompressionFeatureEnabled());
         }
 
+        if (additionalProperties.containsKey(Constants.COLLECTION_TYPE)) {
+            setCollectionType(additionalProperties.get(Constants.COLLECTION_TYPE).toString());
+        }
+
+        if (CollectionType.LIST.value.equals(collectionType)) {
+            typeMapping.put("array", "kotlin.collections.List");
+            typeMapping.put("list", "kotlin.collections.List");
+            additionalProperties.put("isList", true);
+        }
+
         boolean generateApis = additionalProperties.containsKey(CodegenConstants.GENERATE_APIS) && (Boolean) additionalProperties.get(CodegenConstants.GENERATE_APIS);
         String packageFolder = (sourceFolder + File.separator + packageName).replace(".", File.separator);
         String resourcesFolder = "src/main/resources"; // not sure this can be user configurable.
@@ -247,5 +284,7 @@ public class KotlinServerCodegen extends AbstractKotlinCodegen {
         public final static String CORS_DESC = "Ktor by default provides an interceptor for implementing proper support for Cross-Origin Resource Sharing (CORS). See enable-cors.org.";
         public final static String COMPRESSION = "featureCompression";
         public final static String COMPRESSION_DESC = "Adds ability to compress outgoing content using gzip, deflate or custom encoder and thus reduce size of the response.";
+        public final static String COLLECTION_TYPE = "collectionType";
+        public final static String COLLECTION_TYPE_DESC = "Option. Collection type to use";
     }
 }
